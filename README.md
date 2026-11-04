@@ -6,38 +6,74 @@
 
 ## Установка
 
-### nix run (без установки)
+### Вариант 1. Попробовать, ничего не устанавливая
 
 ```bash
 nix run github:varsoug/phonerlite-flake
 ```
 
-### В flake своей системы
+Соберёт пакет (первый раз — минута) и сразу запустит PhonerLite.
+
+### Вариант 2. Включить в свою NixOS-систему (рекомендуется)
+
+**Шаг 1.** Добавьте input в `flake.nix` вашей системы:
 
 ```nix
 {
-  inputs.phonerlite-nix.url = "github:varsoug/phonerlite-flake";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # ...ваши остальные inputs...
+    phonerlite.url = "github:varsoug/phonerlite-flake";
+  };
+```
 
-  outputs = { nixpkgs, phonerlite-nix, ... }: {
+**Шаг 2.** Подключите модуль и включите программу:
+
+```nix
+  outputs = { self, nixpkgs, phonerlite, ... }@inputs: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; };
       modules = [
-        # вариант 1: модуль
-        phonerlite-nix.nixosModules.default
+        # ...ваши остальные модули...
+        inputs.phonerlite.nixosModules.default
         { programs.phonerlite.enable = true; }
-
-        # вариант 2: напрямую пакетом
-        # { environment.systemPackages = [ phonerlite-nix.packages.x86_64-linux.phonerlite ]; }
       ];
     };
   };
-}
 ```
 
-### Overlay
+**Шаг 3.** Пересоберите систему:
+
+```bash
+sudo nixos-rebuild switch --flake /path/to/your/flake#myhost
+```
+
+**Шаг 4.** Запустите PhonerLite из меню приложений (секция «Internet») или командой `phonerlite`.
+
+Вместо модуля можно взять пакет напрямую — эффект тот же:
 
 ```nix
-nixpkgs.overlays = [ inputs.phonerlite-nix.overlays.default ];
-# затем pkgs.phonerlite
+{ environment.systemPackages = [ inputs.phonerlite.packages.x86_64-linux.phonerlite ]; }
+```
+
+### Вариант 3. Overlay (если хочется `pkgs.phonerlite`)
+
+```nix
+nixpkgs.overlays = [ inputs.phonerlite.overlays.default ];
+# дальше в любом месте конфигурации:
+environment.systemPackages = with pkgs; [ phonerlite ];
+```
+
+### Вариант 4. Без flakes (legacy)
+
+```nix
+# configuration.nix
+let
+  phonerlite-flake = builtins.getFlake "github:varsoug/phonerlite-flake";
+in
+{
+  environment.systemPackages = [ phonerlite-flake.packages.x86_64-linux.phonerlite ];
+}
 ```
 
 > Home-manager не нужен: flake зависит только от nixpkgs.
