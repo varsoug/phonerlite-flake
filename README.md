@@ -1,5 +1,7 @@
 <div align="center">
 
+**🇬🇧 English** | [🇨🇳 简体中文](readme/README.zh-CN.md) | [🇪🇸 Español](readme/README.es.md) | [🇧🇷 Português](readme/README.pt-BR.md) | [🇩🇪 Deutsch](readme/README.de.md) | [🇫🇷 Français](readme/README.fr.md) | [🇯🇵 日本語](readme/README.ja.md) | [🇰🇷 한국어](readme/README.ko.md) | [🇷🇺 Русский](readme/README.ru.md) | [🇺🇦 Українська](readme/README.uk.md)
+
 # PhonerLite for NixOS
 
 **A free SIP softphone, packaged for Nix — running on Wine with every desktop-integration pitfall already solved.**
