@@ -23,19 +23,11 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
 
-      # The package bundles the vendor's 7 MB freeware ZIP, so the store
-      # alone saves a full re-unpack on every run.
-      - uses: cachix/cachix-action@v15
-        if: github.event_name == 'push' && github.repository_owner == 'varsoug'
-        with:
-          name: varsoug
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Check the flake outputs
+        run: nix flake check
 
       - name: Build the package
         run: nix build --print-build-logs .#phonerlite
-
-      - name: Check the flake outputs
-        run: nix flake check
 
       - name: Run the package
         # No X server on the runner: only check that the launcher starts and
@@ -50,9 +42,5 @@ jobs:
 
       - name: Check the desktop entry
         run: |
-          chmod +x result/share/applications/phonerlite.desktop || true
-          if ! grep -q '^Exec=phonerlite$' result/share/applications/phonerlite.desktop; then
-            echo "Desktop entry does not point at the launcher"
-            exit 1
-          fi
+          grep -qx 'Exec=phonerlite' result/share/applications/phonerlite.desktop
           test -f result/share/icons/hicolor/256x256/apps/phonerlite.png
