@@ -4,6 +4,7 @@
 
 **A free SIP softphone, packaged for Nix — running on Wine with every desktop-integration pitfall already solved.**
 
+[![CI](https://img.shields.io/github/actions/workflow/status/varsoug/phonerlite-flake/ci.yml?style=flat-square&label=ci)](https://github.com/varsoug/phonerlite-flake/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/varsoug/phonerlite-flake?style=flat-square)](https://github.com/varsoug/phonerlite-flake/releases)
 [![License](https://img.shields.io/github/license/varsoug/phonerlite-flake?style=flat-square)](LICENSE)
 [![NixOS unstable](https://img.shields.io/badge/nixos-unstable-blue.svg?style=flat-square&logo=nixos)](https://nixos.org)
@@ -36,6 +37,7 @@ nix run github:varsoug/phonerlite-flake
 
 The first run builds the package (about a minute) and starts PhonerLite. SIP accounts, the
 phone book and call logs live in `~/.local/share/phonerlite/` — the app stays fully portable.
+The vendor's portable ZIP ships with the flake, so the build needs no network access.
 
 ## ✨ Features
 
@@ -158,10 +160,15 @@ only creates shortcuts. The ZIP is unpacked into the nix store, and the launcher
 **Ini fixes applied on every launch** (idempotent): `WindowState=0` (otherwise the app opens
 minimized — it saves that state on exit) and `ScaleDefaultPPI=<scalePPI>` (UI scale).
 
-**Packing quirks.** `dontUnpack = true` because the generic unpack phase cannot handle the
-ZIP's non-ASCII member names; extraction runs in `installPhase` via `unzip -j` (its non-zero
-exit on name warnings is ignored). The icon is extracted from the `.exe` resources with
+**Packing quirks.** Nix's own unpacker cannot open the vendor ZIP ("do not know how to
+unpack source archive"), so `dontUnpack = true` and `installPhase` extracts it with `unzip`;
+its non-zero exit on the ZIP's non-ASCII member names is ignored, and the per-language
+license copies are dropped. The icon is extracted from the `.exe` resources with
 `wrestool`/`icotool`.
+
+**CI.** `.github/workflows/ci.yml` builds the package and checks its outputs (launcher,
+desktop entry, icon) on every push. The vendor ZIP is committed
+(`packages/PhonerLite64.zip`) because the sandbox cannot reach phoner.de.
 
 </details>
 
@@ -185,11 +192,11 @@ Hardware: AMD Ryzen 7 8845HS (Radeon 780M, amdgpu driver), x86_64, 1920x1080 @ 1
 
 1. Download the fresh `PhonerLite64.zip` from the
    [vendor's download page](https://www.phonerlite.de/download_en.htm).
-2. Update `version` and `hash` in [`packages/phonerlite.nix`](packages/phonerlite.nix):
+2. Replace `packages/PhonerLite64.zip` with it.
+3. Bump `version` in [`packages/phonerlite.nix`](packages/phonerlite.nix).
 
-```bash
-nix hash file PhonerLite64.zip
-```
+The ZIP is part of the repository because the GitHub CI sandbox has no network
+access to the vendor.
 
 ## 📄 License
 
