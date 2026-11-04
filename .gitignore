@@ -1,0 +1,5 @@
+# Upstream PhonerLite (the .zip fetched by packages/phonerlite.nix) is
+# freeware with its own license, see https://www.phonerlite.de/index_en.htm
+result
+result-*
+.direnv/
