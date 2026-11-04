@@ -1,40 +1,77 @@
-# PhonerLite for NixOS / Nix
+<div align="center">
 
-[PhonerLite](https://www.phonerlite.de) — бесплатный (freeware) SIP-софтфон для Windows — упакован для NixOS/Nix и запускается через Wine **со всеми подводными камнями уже решёнными**.
+# PhonerLite for NixOS
 
-Если вы просто поставили `pkgs.wine` и попробовали `wine PhonerLite.exe`, вы быстро наткнётесь на: «Bad EXE format», пиксельные шрифты, кнопки окна в стиле WinXP, окно, которое не разворачивается после сворачивания, и запуск свёрнутым. Этот пакет решает всё это из коробки — разбор каждого решения в разделе [Technical details](#technical-details-как-это-устроено) ниже.
+**A free SIP softphone, packaged for Nix — running on Wine with every desktop-integration pitfall already solved.**
 
-## Установка
+[![Release](https://img.shields.io/github/v/release/varsoug/phonerlite-flake?style=flat-square)](https://github.com/varsoug/phonerlite-flake/releases)
+[![License](https://img.shields.io/github/license/varsoug/phonerlite-flake?style=flat-square)](LICENSE)
+[![NixOS unstable](https://img.shields.io/badge/nixos-unstable-blue.svg?style=flat-square&logo=nixos)](https://nixos.org)
+[![Wine](https://img.shields.io/badge/wine-wow64%2011.0-732727?style=flat-square&logo=wine)](https://www.winehq.org)
 
-### Вариант 1. Попробовать, ничего не устанавливая
+[**Quick start**](#-quick-start) ·
+[Features](#-features) ·
+[Install](#-installing) ·
+[How it works](#-how-it-works) ·
+[Tested on](#-tested-on)
+
+</div>
+
+---
+
+[PhonerLite](https://www.phonerlite.de) is a free (freeware) SIP softphone for Windows. This
+flake packages it for NixOS / Nix on Linux and runs it through Wine **the way it should run**:
+native window decorations, antialiased fonts, sane DPI, a window that survives minimize.
+
+If you just install `pkgs.wine` and run `wine PhonerLite.exe`, you will hit a wall within
+minutes: *"Bad EXE format"*, pixelated fonts, WinXP-style window buttons, a window that never
+comes back from minimize, and an app that always reopens minimized. This package fixes all of
+that out of the box.
+
+## 🚀 Quick start
 
 ```bash
 nix run github:varsoug/phonerlite-flake
 ```
 
-Соберёт пакет (первый раз — минута) и сразу запустит PhonerLite.
+The first run builds the package (about a minute) and starts PhonerLite. SIP accounts, the
+phone book and call logs live in `~/.local/share/phonerlite/` — the app stays fully portable.
 
-### Вариант 2. Включить в свою NixOS-систему (рекомендуется)
+## ✨ Features
 
-**Шаг 1.** Добавьте input в `flake.nix` вашей системы:
+|   |   |
+|---|---|
+| 🍷 **Wine, pre-tuned** | Dedicated 64-bit prefix, correct driver choice, registry and ini fixes applied automatically. |
+| 🪟 **Native decorations** | KWin/GNOME draw the title bar — no built-in WinXP buttons. |
+| 🔤 **Crisp fonts** | Full font smoothing (ClearType-equivalent) enabled in the prefix. |
+| 🖼️ **Sane DPI** | Renders at 120 PPI by default so icons are not blocky; configurable. |
+| 🗂️ **Isolated prefix** | Lives in `~/.local/share/phonerlite-prefix`; your `~/.wine` is never touched. |
+| 📦 **Zero setup** | One module line or one `nix run` — no winecfg, no winetricks, no manual registry edits. |
+| 🔌 **Portable state** | Accounts, phone book and logs stay in `~/.local/share/phonerlite/`, independent of the store. |
+
+## 📦 Installing
+
+### Option 1 — NixOS module (recommended)
+
+**1.** Add the input to your system's `flake.nix`:
 
 ```nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # ...ваши остальные inputs...
+    # ...your other inputs...
     phonerlite.url = "github:varsoug/phonerlite-flake";
   };
 ```
 
-**Шаг 2.** Подключите модуль и включите программу:
+**2.** Enable the module:
 
 ```nix
-  outputs = { self, nixpkgs, phonerlite, ... }@inputs: {
+  outputs = { self, nixpkgs, ... }@inputs: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [
-        # ...ваши остальные модули...
+        # ...your other modules...
         inputs.phonerlite.nixosModules.default
         { programs.phonerlite.enable = true; }
       ];
@@ -42,29 +79,28 @@ nix run github:varsoug/phonerlite-flake
   };
 ```
 
-**Шаг 3.** Пересоберите систему:
+**3.** Rebuild and launch:
 
 ```bash
 sudo nixos-rebuild switch --flake /path/to/your/flake#myhost
+phonerlite
 ```
 
-**Шаг 4.** Запустите PhonerLite из меню приложений (секция «Internet») или командой `phonerlite`.
-
-Вместо модуля можно взять пакет напрямую — эффект тот же:
+Prefer it as a plain package? Same result:
 
 ```nix
 { environment.systemPackages = [ inputs.phonerlite.packages.x86_64-linux.phonerlite ]; }
 ```
 
-### Вариант 3. Overlay (если хочется `pkgs.phonerlite`)
+### Option 2 — Overlay
 
 ```nix
 nixpkgs.overlays = [ inputs.phonerlite.overlays.default ];
-# дальше в любом месте конфигурации:
+# then, anywhere in your config:
 environment.systemPackages = with pkgs; [ phonerlite ];
 ```
 
-### Вариант 4. Без flakes (legacy)
+### Option 3 — No flakes (legacy config)
 
 ```nix
 # configuration.nix
@@ -76,68 +112,93 @@ in
 }
 ```
 
-> Home-manager не нужен: flake зависит только от nixpkgs.
+> [!NOTE]
+> No home-manager is required — the only flake input is `nixpkgs`.
 
-## Что настраивается автоматически
+## ⚙️ Configuration
 
-- **Отдельный 64-битный Wine-префикс** `~/.local/share/phonerlite-prefix` (ваш `~/.wine` не трогается).
-- **Запуск через X11/XWayland**, а не через Wayland-драйвер Wine: у `winewayland.so` нет поддержки декораций композитора (кнопки всегда «WinXP») и есть баг, после которого сворачивание ломает управление окном. Ключ реестра `Decorated=Y` отдаёт рамку окна KWin.
-- **Сглаженные шрифты** (ClearType-эквивалент через реестр).
-- **Не открывается свёрнутым** (PhonerLite запоминает состояние «свёрнуто» в своём ini).
-- **Масштаб 120 PPI** (`ScaleDefaultPPI`) — иначе иконки 96 PPI выглядят пиксельными. Переопредели, если нужно другое:
+The UI scale defaults to 120 PPI (PhonerLite targets 96 PPI and looks blocky otherwise).
+Override it when calling the package:
 
 ```nix
-pkgs.callPackage ./packages/phonerlite.nix { scalePPI = "96"; }  # или "144"
+pkgs.callPackage ./packages/phonerlite.nix { scalePPI = "96"; }  # or "144"
 ```
 
-Приложение, его настройки SIP, телефонная книга и логи живут в `~/.local/share/phonerlite/` (портативный режим PhonerLite).
-
-## Technical details (как это устроено)
+## 🔍 How it works
 
 <details>
-<summary>Разбор каждого «костыля» в пакете</summary>
+<summary>The details behind every workaround</summary>
 
-**Почему отдельный префикс, а не `~/.wine`.** `PhonerLite.exe` — 64-битный PE. Если дефолтный префикс пользователя 32-битный, Wine откажет с «Bad EXE format». Лauncher создаёт собственный префикс `~/.local/share/phonerlite-prefix` и никогда не трогает `~/.wine`.
+**Why a dedicated prefix.** `PhonerLite.exe` is a 64-bit PE binary. If your default `~/.wine`
+is a 32-bit prefix, Wine refuses to run it with "Bad EXE format". The launcher keeps its own
+prefix at `~/.local/share/phonerlite-prefix` and never touches `~/.wine`.
 
-**Почему `wineWow64Packages.stable`, а не `wineWow64Packages.wayland`.** У wayland-сборки Wine вообще нет X11-драйвера (`winex11.drv` отсутствует), приложение не стартует. У stable/staging/full оба драйвера есть.
+**Why `wineWow64Packages.stable`, not `.wayland`.** The `wayland` Wine build ships no X11
+driver at all (`winex11.drv` is absent), so the app cannot start. `stable`, `staging` and
+`full` all include both drivers.
 
-**Почему запуск через X11 (`env -u WAYLAND_DISPLAY`).** Во-первых, у `winewayland.so` нет поддержки протокола `xdg-decoration` — он всегда рисует собственную рамку в стиле WinXP, а ключ реестра `Decorated=Y` действует только на X11-драйвере. Во-вторых, wayland-драйвер имеет баг: после сворачивания окна кнопки управления перестают работать до перезапуска приложения. Через XWayland обе проблемы исчезают, и KWin рисует нормальную рамку.
+**Why force the X11 driver (`env -u WAYLAND_DISPLAY`).** First, `winewayland.so` does not
+implement the `xdg-decoration` protocol — it always draws its own WinXP-style title bar, and
+the `Decorated=Y` registry key only affects the X11 driver. Second, the Wayland driver has a
+bug where minimizing the window kills the window controls until restart. Through XWayland
+both problems disappear and the compositor draws a normal title bar.
 
-**Почему ZIP, а не установщик.** Вендор поставляет портативный ZIP; установщик лишь создаёт ярлыки. ZIP распаковывается в nix store, а launcher при первом запуске копирует его в `~/.local/share/phonerlite` и стартует оттуда — PhonerLite хранит `sipper.ini`, телефонную книгу и логи рядом с .exe, а store read-only.
+**Why the portable ZIP, not the installer.** The vendor ships a portable ZIP; the installer
+only creates shortcuts. The ZIP is unpacked into the nix store, and the launcher copies it to
+`~/.local/share/phonerlite` on first run and starts it from there — PhonerLite keeps
+`sipper.ini`, its phone book and logs next to the `.exe`, while the store path stays read-only.
 
-**Реестр, который прописывается при каждом запуске** (идемпотентно):
-- `HKCU\Control Panel\Desktop\Decorated=Y` — отдать декорирование оконного менеджера;
-- `FontSmoothing=2`, `FontSmoothingType=2`, `FontSmoothingOrientation=1`, `FontSmoothingGamma=0x578` — полное сглаживание шрифтов (по умолчанию в префиксе текст рендерится пиксельно).
-- `LogPixels` **намеренно не трогаем** — установка этого ключа заставляет PhonerLite зависнуть до создания главного окна.
+**Registry keys written on every launch** (idempotent):
+- `HKCU\Control Panel\Desktop\Decorated=Y` — hand window decoration to the window manager;
+- `FontSmoothing=2`, `FontSmoothingType=2`, `FontSmoothingOrientation=1`,
+  `FontSmoothingGamma=0x578` — full font antialiasing (a fresh prefix renders pixelated text).
+- `LogPixels` is deliberately **not** set: with it, PhonerLite hangs before creating its main
+  window.
 
-**ini-правки при каждом запуске** (идемпотентно): `WindowState=0` (иначе приложение открывается свёрнутым — оно запоминает состояние в ini при выходе) и `ScaleDefaultPPI=<scalePPI>` (масштаб интерфейса; иначе иконки 96 PPI выглядят зубчатыми).
+**Ini fixes applied on every launch** (idempotent): `WindowState=0` (otherwise the app opens
+minimized — it saves that state on exit) and `ScaleDefaultPPI=<scalePPI>` (UI scale).
 
-**Особенности распаковки.** `dontUnpack = true`, потому что стандартный unpackPhase не переваривает не-ASCII имена файлов в ZIP; распаковка идёт в installPhase через `unzip -j` (игнорируем ненулевой код возврата на warning'ах имён). Иконка извлекается из ресурсов .exe через `wrestool`/`icotool`.
+**Packing quirks.** `dontUnpack = true` because the generic unpack phase cannot handle the
+ZIP's non-ASCII member names; extraction runs in `installPhase` via `unzip -j` (its non-zero
+exit on name warnings is ignored). The icon is extracted from the `.exe` resources with
+`wrestool`/`icotool`.
 
 </details>
 
-## На чём тестировалось
+## 🖥️ Tested on
 
-| Компонент | Версия |
+| Component | Version |
 | --- | --- |
-| ОС | NixOS 26.11 «Zokor» (`nixos-unstable`, rev `31ecbac`) |
-| DE / WM | KDE Plasma 6.8.1, KWin (Wayland-сессия) |
+| OS | NixOS 26.11 «Zokor» (`nixos-unstable`) |
+| DE / WM | KDE Plasma 6.8.1, KWin (Wayland session) |
 | Wine | wine-wow64 11.0 (`wineWow64Packages.stable`) |
 | PhonerLite | 3.46 (2026-10-12) |
 
-Железо: AMD Ryzen 7 8845HS (Radeon 780M, драйвер amdgpu), x86_64, монитор 1920x1080@144 Гц.
+Hardware: AMD Ryzen 7 8845HS (Radeon 780M, amdgpu driver), x86_64, 1920x1080 @ 144 Hz.
 
-> **Важно:** пакет собирается с `wineWow64Packages.stable`, потому что у `wineWow64Packages.wayland` нет X11-драйвера вообще — без него приложение не стартует. На других DE (GNOME, COSMIC, sway…) ожидается работа по XWayland, но проверено только на Plasma 6.8.
+> [!IMPORTANT]
+> The package builds against `wineWow64Packages.stable` because the `wayland` flavor has no
+> X11 driver at all — without it the app does not start. On other DEs (GNOME, COSMIC, sway…)
+> it is expected to work through XWayland, but only Plasma 6.8 has been verified.
 
-## Обновление версии
+## ⬆️ Updating PhonerLite
 
-1. Скачайте свежий `PhonerLite64.zip` со [страницы загрузки](https://www.phonerlite.de/download_en.htm).
-2. Обновите `version` и `hash` в `packages/phonerlite.nix`:
+1. Download the fresh `PhonerLite64.zip` from the
+   [vendor's download page](https://www.phonerlite.de/download_en.htm).
+2. Update `version` and `hash` in [`packages/phonerlite.nix`](packages/phonerlite.nix):
 
 ```bash
 nix hash file PhonerLite64.zip
 ```
 
-## Лицензия
+## 📄 License
 
-PhonerLite — freeware с закрытым исходным кодом (см. [лицензию](https://www.phonerlite.de/index_en.htm)); разрешено бесплатное использование и распространение. Код упаковки в этом репозитории — MIT.
+PhonerLite itself is freeware with closed sources (see the
+[vendor's license](https://www.phonerlite.de/index_en.htm)); free use and redistribution are
+allowed. The packaging code in this repository is MIT.
+
+<div align="center">
+
+If this saved you an evening of winecfg — consider giving it a ⭐
+
+</div>
