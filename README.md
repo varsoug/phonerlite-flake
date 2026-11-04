@@ -4,6 +4,9 @@
 
 # PhonerLite for NixOS
 
+<img src="docs/screenshot.png" width="420" alt="PhonerLite running through Wine">
+
+
 **A free SIP softphone, packaged for Nix — running on Wine with every desktop-integration pitfall already solved.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/varsoug/phonerlite-flake/ci.yml?style=flat-square&label=ci)](https://github.com/varsoug/phonerlite-flake/actions/workflows/ci.yml)
@@ -202,9 +205,10 @@ access to the vendor.
 
 ## 📄 License
 
-PhonerLite itself is freeware with closed sources (see the
-[vendor's license](https://www.phonerlite.de/index_en.htm)); free use and redistribution are
-allowed. The packaging code in this repository is MIT.
+The packaging code in this repository is [MIT](LICENSE). PhonerLite itself is not covered by
+that license — it is proprietary freeware from the vendor (see the
+[vendor's license](https://www.phonerlite.de/index_en.htm)), bundled verbatim in
+`packages/PhonerLite64.zip` for offline builds.
 
 <div align="center">
 

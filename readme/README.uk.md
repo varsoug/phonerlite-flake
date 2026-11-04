@@ -4,6 +4,8 @@
 
 # PhonerLite для NixOS
 
+<img src="../docs/screenshot.png" width="420" alt="PhonerLite running through Wine">
+
 **Безкоштовний SIP-софтфон, упакований для Nix — працює на Wine з усіма виправленими проблемами інтеграції з робочим столом.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/varsoug/phonerlite-flake/ci.yml?style=flat-square&label=ci)](https://github.com/varsoug/phonerlite-flake/actions/workflows/ci.yml)
@@ -31,6 +33,13 @@
 в стіну: *«Bad EXE format»*, піксельні шрифти, кнопки вікна в стилі WinXP, вікно, яке не
 повертається після згортання, і застосунок, що завжди відкривається згорнутим. Цей пакет
 виправляє все це з коробки.
+
+## 👥 Для кого це
+
+- Ви використовуєте **NixOS або Nix** (з flakes чи без) і вам потрібен SIP-софтфон, що працює на Linux.
+- Ви працюєте у **KDE Plasma на Wayland** — саме тут `wine PhonerLite.exe` зазвичай і ламається.
+- Ви не хочете **налаштовувати вручну**: без winecfg, winetricks і правки реєстру.
+- Вам потрібна саме **збірка вендора** PhonerLite (freeware, закритий код), а не заміна.
 
 ## 🚀 Швидкий старт
 
@@ -204,9 +213,7 @@ ZIP є частиною репозиторію, бо пісочниця GitHub C
 
 ## 📄 Ліцензія
 
-Сам PhonerLite — freeware із закритим вихідним кодом (див.
-[ліцензію вендора](https://www.phonerlite.de/index_en.htm)); вільне використання й
-розповсюдження дозволені. Код пакування в цьому репозиторії — MIT.
+Код пакування в цьому репозиторії — [MIT](../LICENSE). Сам PhonerLite під неї не підпадає: це пропрієтарний freeware вендора (див. [ліцензію вендора](https://www.phonerlite.de/index_en.htm)), покладений у `packages/PhonerLite64.zip` без змін для збирання офлайн.
 
 <div align="center">
 

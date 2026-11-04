@@ -4,6 +4,8 @@
 
 # NixOS용 PhonerLite
 
+<img src="../docs/screenshot.png" width="420" alt="PhonerLite running through Wine">
+
 **Nix용으로 패키징된 무료 SIP 소프트폰 — 데스크톱 통합의 모든 함정을 미리 해결한 상태로 Wine에서 실행됩니다.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/varsoug/phonerlite-flake/ci.yml?style=flat-square&label=ci)](https://github.com/varsoug/phonerlite-flake/actions/workflows/ci.yml)
@@ -29,6 +31,13 @@ flake는 이를 NixOS / Nix on Linux용으로 패키징하고 Wine 위에서 **�
 `pkgs.wine`만 설치하고 `wine PhonerLite.exe`를 실행하면 몇 분 안에 벽에 부딪힙니다.
 *"Bad EXE format"*, 깨져 보이는 글꼴, WinXP 스타일 창 버튼, 최소화 후 다시 돌아오지 않는 창,
 그리고 항상 최소화 상태로 열리는 앱. 이 패키지는 그 모든 것을 처음부터 해결합니다.
+
+## 👥 누구를 위한 것인가
+
+- **NixOS 또는 Nix**(flakes 사용 여부 무관)를 쓰면서 Linux에서 돌아가는 SIP 소프트폰이 필요한 사람.
+- **Wayland 기반 KDE Plasma**를 쓰는 사람 — `wine PhonerLite.exe`가 보통 여기서 실패합니다.
+- **수동 설정을 하기 싫은** 사람: winecfg, winetricks, 레지스트리 편집이 필요 없습니다.
+- 대체품이 아니라 **벤더 배포판 빌드**(프리웨어, 소스 비공개)를 원하는 사람.
 
 ## 🚀 빠른 시작
 
@@ -199,9 +208,7 @@ ZIP이 저장소에 포함된 이유는 GitHub CI 샌드박스가 벤더에 접�
 
 ## 📄 라이선스
 
-PhonerLite 자체는 소스가 공개되지 않은 프리웨어입니다(
-[벤더 라이선스](https://www.phonerlite.de/index_en.htm) 참조). 무료 사용과 재배포는
-허용됩니다. 이 저장소의 패키징 코드는 MIT입니다.
+이 저장소의 패키징 코드는 [MIT](../LICENSE)입니다. PhonerLite 자체는 해당되지 않습니다: 벤더의 독점 프리웨어이며([벤더 라이선스](https://www.phonerlite.de/index_en.htm) 참조) 오프라인 빌드를 위해 `packages/PhonerLite64.zip`에 그대로 포함되어 있습니다.
 
 <div align="center">
 

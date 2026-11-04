@@ -4,6 +4,8 @@
 
 # PhonerLite for NixOS
 
+<img src="../docs/screenshot.png" width="420" alt="PhonerLite running through Wine">
+
 **一款免费的 SIP 软电话，打包为 Nix 包 — 在 Wine 上运行，各类桌面集成问题均已解决。**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/varsoug/phonerlite-flake/ci.yml?style=flat-square&label=ci)](https://github.com/varsoug/phonerlite-flake/actions/workflows/ci.yml)
@@ -29,6 +31,13 @@
 如果只是安装 `pkgs.wine` 然后运行 `wine PhonerLite.exe`，几分钟内就会撞墙：*「Bad EXE
 format」*、像素化的字体、WinXP 风格的窗口按钮、最小化后再也回不来的窗口，以及每次都
 以最小化状态启动的程序。本包已从根源上解决这些问题。
+
+## 👥 适合谁使用
+
+- 你使用 **NixOS 或 Nix**（是否用 flakes 都可以），需要一个在 Linux 上运行的 SIP 软电话。
+- 你在 **Wayland 下的 KDE Plasma** 上工作 — 这里 `wine PhonerLite.exe` 通常会出现问题。
+- 你不想**手动配置**：不用 winecfg、winetricks，也不用手改注册表。
+- 你要的是 **PhonerLite 的官方构建**（freeware、闭源），而不是替代品。
 
 ## 🚀 快速开始
 
@@ -193,8 +202,7 @@ ZIP 是仓库的一部分，因为 GitHub CI 沙箱无法访问厂商站点。
 
 ## 📄 许可证
 
-PhonerLite 本身是闭源 freeware（见[厂商许可证](https://www.phonerlite.de/index_en.htm)），
-允许免费使用和再分发。本仓库的打包代码采用 MIT 许可证。
+本仓库的打包代码采用 [MIT](../LICENSE)。PhonerLite 本身不在其覆盖范围内：它是厂商的专有 freeware（见[厂商许可证](https://www.phonerlite.de/index_en.htm)），原样放在 `packages/PhonerLite64.zip` 中以支持离线构建。
 
 <div align="center">
 
