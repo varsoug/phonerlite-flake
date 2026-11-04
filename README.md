@@ -9,14 +9,14 @@
 ### nix run (без установки)
 
 ```bash
-nix run github:<your-name>/phonerlite-nix
+nix run github:varsoug/phonerlite-flake
 ```
 
 ### В flake своей системы
 
 ```nix
 {
-  inputs.phonerlite-nix.url = "github:<your-name>/phonerlite-nix";
+  inputs.phonerlite-nix.url = "github:varsoug/phonerlite-flake";
 
   outputs = { nixpkgs, phonerlite-nix, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
