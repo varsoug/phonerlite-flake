@@ -74,14 +74,10 @@ stdenvNoCC.mkDerivation {
     if [ ! -f "\$appdir/PhonerLite.exe" ]; then
       cp -r --no-preserve=mode "$out/share/phonerlite/." "\$appdir/"
     fi
+    WINE=${wineWow64Packages.stable}/bin/wine
     if [ ! -d "\$WINEPREFIX/drive_c" ]; then
       ${wineWow64Packages.stable}/bin/wineboot -u
     fi
-    # Let the window manager draw the title bar: Decorated=Y makes the
-    # winex11 driver skip its built-in Windows-style frame. The wayland
-    # driver has no xdg-decoration support at all, so WAYLAND_DISPLAY is
-    # unset below to run through XWayland.
-    ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v Decorated /d Y /f >/dev/null 2>&1 || true
     # A fresh prefix renders pixelated bitmap fonts; enable full smoothing.
     ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v FontSmoothing /d 2 /f >/dev/null 2>&1 || true
     ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v FontSmoothingOrientation /d 1 /f >/dev/null 2>&1 || true
@@ -90,10 +86,29 @@ stdenvNoCC.mkDerivation {
     # PhonerLite saves WindowState=1 (minimized) on exit and restores it on
     # the next start; force a normal window before every launch.
     sed -i 's/^WindowState=.*/WindowState=0/' "\$appdir/sipper.ini" 2>/dev/null || true
+    # Keep the main window in the task list. With HideTaskbarIcon=1 the app
+    # lives only in the system tray, and a tray that is hidden or covered
+    # (XFCE panels are 21 px tall) leaves no way to raise or quit it.
+    for d in PhonerLite.ini sipper.ini; do
+      f="\$appdir/\$d"
+      [ -f "\$f" ] || continue
+      if grep -q '^HideTaskbarIcon=' "\$f"; then
+        sed -i 's/^HideTaskbarIcon=.*/HideTaskbarIcon=0/' "\$f"
+      else
+        sed -i 's/^ShowSystray=.*/&\nHideTaskbarIcon=0/' "\$f"
+      fi
+    done
     # Render at 120 PPI so the 96-PPI icons are not upscaled by the
     # compositor. LogPixels is deliberately not set: with it the app hangs
     # before creating its main window.
     sed -i 's/^ScaleDefaultPPI=.*/ScaleDefaultPPI=${scalePPI}/' "\$appdir/sipper.ini" 2>/dev/null || true
+    # Window frames: write Decorated=Y, then stop the wineserver of any
+    # earlier launch so the app's server starts with the new value. A
+    # leftover server keeps the old Decorated setting and leaves the
+    # incoming-call popup with an extra WinXP-style frame.
+    "\$WINE" reg add 'HKCU\\Control Panel\\Desktop' /v Decorated /d Y /f >/dev/null 2>&1 || true
+    ${wineWow64Packages.stable}/bin/wineserver -k >/dev/null 2>&1 || true
+    ${wineWow64Packages.stable}/bin/wineserver -w >/dev/null 2>&1 || true
     exec env -u WAYLAND_DISPLAY ${wineWow64Packages.stable}/bin/wine "\$appdir/PhonerLite.exe" "\$@"
     EOF
     chmod +x $out/bin/phonerlite

@@ -163,7 +163,16 @@ only creates shortcuts. The ZIP is unpacked into the nix store, and the launcher
   window.
 
 **Ini fixes applied on every launch** (idempotent): `WindowState=0` (otherwise the app opens
-minimized — it saves that state on exit) and `ScaleDefaultPPI=<scalePPI>` (UI scale).
+minimized — it saves that state on exit), `HideTaskbarIcon=0` (with `1` the app lives only in
+the system tray, and a hidden or covered tray leaves no way to raise or quit it) and
+`ScaleDefaultPPI=<scalePPI>` (UI scale).
+
+**Window frames.** Before the app starts, the launcher writes `Decorated=Y` and stops any
+wineserver left over from an earlier launch: the X11 driver reads that key when the server
+starts, and a stale server keeps the old value, which shows up as a second WinXP-style frame
+next to an incoming-call window. On a native X11 session the window manager draws the frame
+itself, so the key is harmless there; it matters under XWayland, where Wine's own frame would
+otherwise double the compositor's.
 
 **Packing quirks.** Nix's own unpacker cannot open the vendor ZIP ("do not know how to
 unpack source archive"), so `dontUnpack = true` and `installPhase` extracts it with `unzip`;
