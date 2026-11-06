@@ -102,21 +102,22 @@ stdenvNoCC.mkDerivation {
     ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v FontSmoothingOrientation /d 1 /f >/dev/null 2>&1 || true
     ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v FontSmoothingType /d 2 /f >/dev/null 2>&1 || true
     ${wineWow64Packages.stable}/bin/wine reg add 'HKCU\\Control Panel\\Desktop' /v FontSmoothingGamma /d 0x578 /f >/dev/null 2>&1 || true
-    # PhonerLite saves WindowState=1 (minimized) on exit and restores it on
-    # the next start; force a normal window before every launch.
-    sed -i 's/^WindowState=.*/WindowState=0/' "\$appdir/sipper.ini" 2>/dev/null || true
+    # PhonerLite stores WindowState=1 (minimized) on exit and restores it on
+    # the next start. Its ini files are CRLF-encoded; keep the terminator.
+    sed -i 's/^WindowState=.*/WindowState=0\r/' "\$appdir/sipper.ini" 2>/dev/null || true
     # Keep the main window in the task list. With HideTaskbarIcon=1 the app
     # lives only in the system tray, and a tray that is hidden or covered
-    # (XFCE panels are 21 px tall) leaves no way to raise or quit it.
-    for d in PhonerLite.ini sipper.ini; do
-      f="\$appdir/\$d"
-      [ -f "\$f" ] || continue
+    # leaves no way to raise or quit it. Only sipper.ini carries this key;
+    # the command-line keys PhonerLite.ini may pick up from Windows are left
+    # untouched.
+    f="\$appdir/sipper.ini"
+    if [ -f "\$f" ]; then
       if grep -q '^HideTaskbarIcon=' "\$f"; then
-        sed -i 's/^HideTaskbarIcon=.*/HideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}/' "\$f"
+        sed -i 's/^HideTaskbarIcon=.*/HideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}\r/' "\$f"
       else
-        sed -i 's/^ShowSystray=.*/&\nHideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}/' "\$f"
+        sed -i 's/^ShowSystray=.*/&\nHideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}\r/' "\$f"
       fi
-    done
+    fi
     # Render at 120 PPI so the 96-PPI icons are not upscaled by the
     # compositor. LogPixels is deliberately not set: with it the app hangs
     # before creating its main window.
