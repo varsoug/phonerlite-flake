@@ -124,12 +124,28 @@ in
 
 ## ⚙️ Configuration
 
-The UI scale defaults to 120 PPI (PhonerLite targets 96 PPI and looks blocky otherwise).
-Override it when calling the package:
+The package adapts to the session at launch — there are no separate Wayland and X11 branches
+or packages. The launcher looks at `XDG_SESSION_TYPE` (falling back to `WAYLAND_DISPLAY`) and:
+
+| Session | What the launcher does |
+| --- | --- |
+| Wayland (Plasma, GNOME, sway…) | Runs PhonerLite through **XWayland** with `WAYLAND_DISPLAY` unset: Wine's own Wayland driver has no `xdg-decoration` support and its minimise bug breaks the window controls. |
+| X11 | Runs PhonerLite directly; the window manager draws the frame. |
+| Unknown (started from a systemd unit, cron…) | Guesses from `WAYLAND_DISPLAY`; force the right one with `sessionType`. |
+
+Override the defaults when calling the package:
 
 ```nix
-pkgs.callPackage ./packages/phonerlite.nix { scalePPI = "96"; }  # or "144"
+pkgs.callPackage ./packages/phonerlite.nix {
+  scalePPI = "96";             # default "120"; PhonerLite targets 96 PPI
+  sessionType = "x11";         # "auto" (default), "wayland" or "x11"
+  trayMode = "tray";           # "taskbar" (default) or "tray"
+}
 ```
+
+`trayMode = "taskbar"` keeps the window in the task list, so it can always be raised and
+closed. `trayMode = "tray"` sets `HideTaskbarIcon=1`: the app lives only in the system tray,
+which is handy if your panel has a tray — and a dead end if it is hidden or covered.
 
 ## 🔍 How it works
 
@@ -191,7 +207,7 @@ desktop entry, icon) on every push. The vendor ZIP is committed
 | Component | Version |
 | --- | --- |
 | OS | NixOS 26.11 «Zokor» (`nixos-unstable`) |
-| DE / WM | KDE Plasma 6.8.1, KWin (Wayland session) |
+| DE / WM | KDE Plasma 6.8.1, KWin (Wayland session); XFCE 4.20 (X11 session) |
 | Wine | wine-wow64 11.0 (`wineWow64Packages.stable`) |
 | PhonerLite | 3.46 (2026-10-12) |
 
@@ -199,8 +215,9 @@ Hardware: AMD Ryzen 7 8845HS (Radeon 780M, amdgpu driver), x86_64, 1920x1080 @ 1
 
 > [!IMPORTANT]
 > The package builds against `wineWow64Packages.stable` because the `wayland` flavor has no
-> X11 driver at all — without it the app does not start. On other DEs (GNOME, COSMIC, sway…)
-> it is expected to work through XWayland, but only Plasma 6.8 has been verified.
+> X11 driver at all — without it the app does not start. A Wayland session is driven through
+> XWayland; an X11 session runs directly. Verified on Plasma 6.8 (Wayland) and XFCE 4.20
+> (X11); other DEs should work the same way, but have not been checked.
 
 ## ⬆️ Updating PhonerLite
 

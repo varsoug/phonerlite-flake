@@ -6,7 +6,15 @@
   makeDesktopItem,
   unzip,
   scalePPI ? "120",
+  # "auto" detects the session type (Wayland -> XWayland, X11 -> direct);
+  # force it when a launcher starts the app outside the desktop session.
+  sessionType ? "auto",
+  # "taskbar" keeps the window in the task list, "tray" hides it there and
+  # leaves the system-tray icon only.
+  trayMode ? "taskbar",
 }:
+assert lib.elem sessionType [ "auto" "wayland" "x11" ];
+assert lib.elem trayMode [ "taskbar" "tray" ];
 
 let
   # Checked in next to this file. The vendor ships a portable ZIP and the
@@ -75,6 +83,17 @@ stdenvNoCC.mkDerivation {
       cp -r --no-preserve=mode "$out/share/phonerlite/." "\$appdir/"
     fi
     WINE=${wineWow64Packages.stable}/bin/wine
+    # Wine's own Wayland driver has no xdg-decoration support and its
+    # minimise bug breaks the window controls, so a Wayland session always
+    # runs through XWayland; only then is WAYLAND_DISPLAY is cleared below.
+    session=${sessionType}
+    if [ "\$session" = auto ]; then
+      case "\$XDG_SESSION_TYPE" in
+        wayland) session=wayland ;;
+        x11) session=x11 ;;
+        *) if [ -n "\$WAYLAND_DISPLAY" ]; then session=wayland; else session=x11; fi ;;
+      esac
+    fi
     if [ ! -d "\$WINEPREFIX/drive_c" ]; then
       ${wineWow64Packages.stable}/bin/wineboot -u
     fi
@@ -93,9 +112,9 @@ stdenvNoCC.mkDerivation {
       f="\$appdir/\$d"
       [ -f "\$f" ] || continue
       if grep -q '^HideTaskbarIcon=' "\$f"; then
-        sed -i 's/^HideTaskbarIcon=.*/HideTaskbarIcon=0/' "\$f"
+        sed -i 's/^HideTaskbarIcon=.*/HideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}/' "\$f"
       else
-        sed -i 's/^ShowSystray=.*/&\nHideTaskbarIcon=0/' "\$f"
+        sed -i 's/^ShowSystray=.*/&\nHideTaskbarIcon=${if trayMode == "tray" then "1" else "0"}/' "\$f"
       fi
     done
     # Render at 120 PPI so the 96-PPI icons are not upscaled by the
@@ -109,7 +128,10 @@ stdenvNoCC.mkDerivation {
     "\$WINE" reg add 'HKCU\\Control Panel\\Desktop' /v Decorated /d Y /f >/dev/null 2>&1 || true
     ${wineWow64Packages.stable}/bin/wineserver -k >/dev/null 2>&1 || true
     ${wineWow64Packages.stable}/bin/wineserver -w >/dev/null 2>&1 || true
-    exec env -u WAYLAND_DISPLAY ${wineWow64Packages.stable}/bin/wine "\$appdir/PhonerLite.exe" "\$@"
+    if [ "\$session" = wayland ]; then
+      exec env -u WAYLAND_DISPLAY "\$WINE" "\$appdir/PhonerLite.exe" "\$@"
+    fi
+    exec "\$WINE" "\$appdir/PhonerLite.exe" "\$@"
     EOF
     chmod +x $out/bin/phonerlite
 
