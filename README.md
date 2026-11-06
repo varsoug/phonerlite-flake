@@ -19,6 +19,7 @@
 [Features](#-features) ·
 [Install](#-installing) ·
 [How it works](#-how-it-works) ·
+[Minimise & tray](#-do-not-minimise-phonerlite) ·
 [Tested on](#-tested-on)
 
 </div>
@@ -201,6 +202,23 @@ desktop entry, icon) on every push. The vendor ZIP is committed
 (`packages/PhonerLite64.zip`) because the sandbox cannot reach phoner.de.
 
 </details>
+
+## 📌 Do not minimise PhonerLite
+
+Minimise the window, and PhonerLite does not create a system-tray icon to come back from: the
+main window is left in the X11 `Withdrawn` state, which no panel, task list or Alt+Tab entry can
+restore. In that state the only way out is to stop the process (it does not confirm) and start
+the app again — messages and calls the app had not written yet are lost.
+
+So: **do not minimise PhonerLite and do not rely on the tray icon.** Turn its tray icon off in
+the app's own settings and keep the window in the task list; close it with its title bar button
+when you are done. The launcher cannot fix this from the outside: the key `HideTaskbarIcon` in
+`sipper.ini` is ignored by the app, Wine's own `explorer.exe` shell is what hides the window from
+the task list, and disabling that shell (`WINEDLLOVERRIDES=explorer.exe=d`) leaves Wine without a
+window driver, so the app does not start at all.
+
+If a minimised window is gone: `pgrep -f PhonerLite.exe` and `kill` it, then run `phonerlite`
+again. A second launch would otherwise replace the running instance.
 
 ## 🖥️ Tested on
 
