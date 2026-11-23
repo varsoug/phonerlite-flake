@@ -203,6 +203,24 @@ desktop entry, icon) on every push. The vendor ZIP is committed
 
 </details>
 
+## 🪟 Hyprland: hiding PhonerLite's blank helper window
+
+On Hyprland, Wine may create a second 800×800 window belonging to `phonerlite.exe`
+with an empty title. It appears as a blank white window and can steal focus from
+the real `PhonerLite` window. Add this window rule to `hyprland.conf`:
+
+```ini
+windowrule = float, class:phonerlite.exe, title:
+windowrule = move -2000 -2000, class:phonerlite.exe, title:
+windowrule = size 1 1, class:phonerlite.exe, title:
+windowrule = opacity 0 override, class:phonerlite.exe, title:
+windowrule = nofocus, class:phonerlite.exe, title:
+windowrule = noinitialfocus, class:phonerlite.exe, title:
+```
+
+Kept as a window-rule recommendation rather than baked into the package, because
+the helper window is harmless on KDE/GNOME and hiding it depends on the compositor.
+
 ## 📌 Do not minimise PhonerLite
 
 Minimise the window, and PhonerLite does not create a system-tray icon to come back from: the
